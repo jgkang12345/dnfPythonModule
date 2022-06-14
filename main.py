@@ -7,7 +7,7 @@ import requests
 
 
 options = webdriver.ChromeOptions()
-options.add_argument('headless')
+# options.add_argument('headless')
 driver = webdriver.Chrome('chromedriver.exe', options=options)
 
 def root_li_ret ():
@@ -25,54 +25,67 @@ def sub_li_ret ():
 
 
 if __name__ == '__main__':
+
     driver.get("https://dunfaoff.com/ranking.df")
-    select_li_list_size = len(root_li_ret())
 
-    print("root_ul_list ", select_li_list_size)
+    while (True):
+        try:
+            select_li_list_size = len(root_li_ret())
 
-    for root_index in range(0, select_li_list_size):
-        li = root_li_ret()[root_index]
-        print("root_index ", (root_index + 1), " / " ,select_li_list_size)
+            print("root_ul_list ", select_li_list_size)
 
-        data_gb = li.get_attribute('data-sex') + li.get_attribute('data-job')
-        print("data_gb ", data_gb)
+            for root_index in range(0, select_li_list_size):
+                li = root_li_ret()[root_index]
+                print("root_index ", (root_index + 1), " / ", select_li_list_size)
 
-        li.click()
-        time.sleep(3)
+                data_gb = li.get_attribute('data-sex') + li.get_attribute('data-job')
+                print("data_gb ", data_gb)
 
-        select_li_list_size_ch = len(sub_li_ret())
-        print("sub_ul_list ", select_li_list_size_ch)
-        for sub_index in range(0, select_li_list_size_ch):
-            print("sub_index ", (sub_index + 1), " / ", select_li_list_size_ch)
-            sub_li = sub_li_ret()[sub_index]
-            data_gb_detail = sub_li.get_attribute('data-id')
-            print("data_gb_detail ", data_gb_detail)
-            sub_li.click()
-            time.sleep(2)
-            search_btn = driver.find_element(By.ID, 'searchbtn')
-            search_btn.click()
-            time.sleep(3)
-            imgList = driver.find_elements(By.CLASS_NAME, 'char_img')
+                li.click()
+                time.sleep(3)
 
-            request_body = {}
-            item_list = []
+                select_li_list_size_ch = len(sub_li_ret())
+                print("sub_ul_list ", select_li_list_size_ch)
+                for sub_index in range(0, select_li_list_size_ch):
+                    print("sub_index ", (sub_index + 1), " / ", select_li_list_size_ch)
+                    sub_li = sub_li_ret()[sub_index]
+                    data_detail_gb = sub_li.get_attribute('data-id')
+                    print("data_detail_gb ", data_detail_gb)
+                    sub_li.click()
+                    time.sleep(2)
+                    search_btn = driver.find_element(By.ID, 'searchbtn')
+                    search_btn.click()
+                    time.sleep(3)
+                    imgList = driver.find_elements(By.CLASS_NAME, 'char_img')
 
-            for img in imgList:
-                imgUrl = img.get_attribute("src")
-                parse_result = urlparse(imgUrl)
-                requiredList = list(filter(lambda x: x != "", parse_result.path.replace("/df/servers/", "\\").replace("/characters/","\\").split("\\")))
-                item_list.append({"serverId": requiredList[0], "itemId": requiredList[1]})
+                    item_list = []
 
-            request_body['data_gb'] = data_gb
-            request_body['data_gb_detail'] = data_gb_detail
-            request_body['item_list'] = item_list
+                    for index in range(0, len(imgList)):
+                        imgUrl = imgList[index].get_attribute("src")
+                        parse_result = urlparse(imgUrl)
+                        requiredList = list(filter(lambda x: x != "",
+                                                   parse_result.path.replace("/df/servers/", "\\").replace("/characters/",
+                                                                                                           "\\").split(
+                                                       "\\")))
+                        item_list.append(
+                            {"ord_no": index, "server_id": requiredList[0], "ch_id": requiredList[1], "data_gb": data_gb,
+                             "data_detail_gb": data_detail_gb})
+
+                    print('request_body: ', item_list)
+                    headers = {'Content-Type': 'application/json; charset=utf-8'}
+                    response = requests.post("http://localhost:8080/python/insertRanker", json=item_list, headers=headers)
+
+                    print('response: ', response)
+        except Exception as e:
+            print("예외가 발생하였습니다 프로그램을 종료하고 5분후 다시 실행합니다")
 
 
-            print('request_body: ', request_body)
-            headers = {'Content-Type': 'application/json; charset=utf-8'}
-            response = requests.post("http://localhost:8080/python/helloWorld", json=request_body, headers=headers)
 
-            print('response: ', response)
+        time.sleep(300)
+
+
+
+
 
 
 
