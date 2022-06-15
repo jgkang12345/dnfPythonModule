@@ -4,10 +4,11 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from urllib.parse import urlparse, parse_qs
 import requests
+from selenium.webdriver.common.keys import Keys
 
 
 options = webdriver.ChromeOptions()
-# options.add_argument('headless')
+options.add_argument('headless')
 driver = webdriver.Chrome('chromedriver.exe', options=options)
 
 def root_li_ret ():
@@ -42,7 +43,7 @@ if __name__ == '__main__':
                 print("data_gb ", data_gb)
 
                 li.click()
-                time.sleep(3)
+                time.sleep(0.5)
 
                 select_li_list_size_ch = len(sub_li_ret())
                 print("sub_ul_list ", select_li_list_size_ch)
@@ -52,10 +53,12 @@ if __name__ == '__main__':
                     data_detail_gb = sub_li.get_attribute('data-id')
                     print("data_detail_gb ", data_detail_gb)
                     sub_li.click()
-                    time.sleep(2)
+                    time.sleep(0.5)
+                    print('sub_li 클릭')
                     search_btn = driver.find_element(By.ID, 'searchbtn')
-                    search_btn.click()
-                    time.sleep(3)
+                    search_btn.send_keys(Keys.RETURN)
+                    print('search_btn 클릭')
+                    time.sleep(1)
                     imgList = driver.find_elements(By.CLASS_NAME, 'char_img')
 
                     item_list = []
@@ -77,6 +80,7 @@ if __name__ == '__main__':
 
                     print('response: ', response)
         except Exception as e:
+            print(e)
             print("예외가 발생하였습니다 프로그램을 종료하고 5분후 다시 실행합니다")
 
 
